@@ -134,7 +134,7 @@ State_Migration_2018_clean <- read_excel("data/State_to_State_Migrations_Table_2
   filter(State != StateBefore) %>% #remove internal migration
   mutate(NextElection=2020, Year=2018, PreviousElection=2016, State=toupper(State), StateBefore=toupper(StateBefore) )
 
-#read 2018 migration data
+#read 2017 migration data
 State_Migration_2017_clean <- read_excel("data/State_to_State_Migrations_Table_2017.xls", 
                                          sheet = "Table", range = "A12:DQ78", 
                                          col_names = FALSE)   %>% select(State='...1',
@@ -209,9 +209,9 @@ democrat_list <- X1976_2020_president %>%
 republican_list <-  X1976_2020_president %>% 
   filter(DEMOCRAT==0)
 #set state to upper case to prepare for join
-
 state_info <- state_info %>% 
   mutate(State=toupper(State))
+
 #join data to get 1 row for each state, year with winner
 presidential_list <- state_info %>% 
   inner_join(democrat_list ) %>% 
@@ -222,11 +222,75 @@ presidential_list <- state_info %>%
                           REPUBLICAN > DEMOCRAT ~ "RED")) %>% 
     filter(DEMOCRAT >100) #remove weird data quirk where arizona had 2 records in 2016
 
-
-test <-State_Migration_2019_clean %>% 
+#get the colorized data for 2019
+colorized_2019_data <-State_Migration_2019_clean %>% 
   inner_join(presidential_list, by=c("State"="State","NextElection"="year")) %>% 
   select(State, StateBefore, Migration, NextElection, Year, PreviousElection, nextWinner=winner) %>% 
   inner_join(presidential_list, by=c("State"="State","PreviousElection"="year"))  %>% 
   select(State, StateBefore, Migration, NextElection, Year, PreviousElection, nextWinner, previouswinner=winner)  %>% 
   inner_join(presidential_list, by=c("StateBefore"="State","PreviousElection"="year")) %>% 
   select(State, StateBefore, Migration, NextElection, Year, PreviousElection, nextWinner, previouswinner, migrationcolor=winner)   
+#summarized the colorized data for 2019
+colorized_2019_summary_data <- colorized_2019_data %>% 
+  select(State, Year, NextElection,previouswinner , migrationcolor, Migration) %>% 
+  mutate(Migration=parse_number(Migration, na="N/A")) %>% 
+  group_by(State, Year, NextElection, migrationcolor) %>% 
+  summarize(migration_count=sum(Migration))  %>% 
+  mutate(migration_count=case_when(is.na(migration_count) ~ 0,
+                                   TRUE ~ migration_count)) %>% 
+  pivot_wider(names_from = migrationcolor,values_from=migration_count) %>% 
+  mutate(migration_winner=case_when((BLUE > RED) ~ "BLUE",
+                                    (RED > BLUE) ~ "RED") )    %>% 
+    mutate (migration_winner_amount=case_when(BLUE > RED ~ BLUE-RED,
+                                            RED > BLUE ~ RED-BLUE)) %>% 
+  group_by(State, Year, NextElection,migration_winner) %>% 
+  summarise(Migration=migration_winner_amount)
+  
+#get the colorized data for 2018
+colorized_2018_data <-State_Migration_2018_clean %>% 
+  inner_join(presidential_list, by=c("State"="State","NextElection"="year")) %>% 
+  select(State, StateBefore, Migration, NextElection, Year, PreviousElection, nextWinner=winner) %>% 
+  inner_join(presidential_list, by=c("State"="State","PreviousElection"="year"))  %>% 
+  select(State, StateBefore, Migration, NextElection, Year, PreviousElection, nextWinner, previouswinner=winner)  %>% 
+  inner_join(presidential_list, by=c("StateBefore"="State","PreviousElection"="year")) %>% 
+  select(State, StateBefore, Migration, NextElection, Year, PreviousElection, nextWinner, previouswinner, migrationcolor=winner) 
+#summarized the colorized data for 2018
+colorized_2018_summary_data <- colorized_2018_data %>% 
+  select(State, Year, NextElection,previouswinner , migrationcolor, Migration) %>% 
+  mutate(Migration=parse_number(Migration, na="N/A")) %>% 
+  group_by(State, Year, NextElection, migrationcolor) %>% 
+  summarize(migration_count=sum(Migration))  %>% 
+  mutate(migration_count=case_when(is.na(migration_count) ~ 0,
+                                   TRUE ~ migration_count)) %>% 
+  pivot_wider(names_from = migrationcolor,values_from=migration_count) %>% 
+  mutate(migration_winner=case_when((BLUE > RED) ~ "BLUE",
+                                    (RED > BLUE) ~ "RED") )    %>% 
+  mutate (migration_winner_amount=case_when(BLUE > RED ~ BLUE-RED,
+                                            RED > BLUE ~ RED-BLUE)) %>% 
+  group_by(State, Year, NextElection,migration_winner) %>% 
+  summarise(Migration=migration_winner_amount)
+
+#get the colorized data for 2017
+colorized_2017_data <-State_Migration_2017_clean %>% 
+  inner_join(presidential_list, by=c("State"="State","NextElection"="year")) %>% 
+  select(State, StateBefore, Migration, NextElection, Year, PreviousElection, nextWinner=winner) %>% 
+  inner_join(presidential_list, by=c("State"="State","PreviousElection"="year"))  %>% 
+  select(State, StateBefore, Migration, NextElection, Year, PreviousElection, nextWinner, previouswinner=winner)  %>% 
+  inner_join(presidential_list, by=c("StateBefore"="State","PreviousElection"="year")) %>% 
+  select(State, StateBefore, Migration, NextElection, Year, PreviousElection, nextWinner, previouswinner, migrationcolor=winner) 
+#summarized the colorized data for 2017
+colorized_2017_summary_data <- colorized_2017_data %>% 
+  select(State, Year, NextElection,previouswinner , migrationcolor, Migration) %>% 
+  mutate(Migration=parse_number(Migration, na="N/A")) %>% 
+  group_by(State, Year, NextElection, migrationcolor) %>% 
+  summarize(migration_count=sum(Migration))  %>% 
+  mutate(migration_count=case_when(is.na(migration_count) ~ 0,
+                                   TRUE ~ migration_count)) %>% 
+  pivot_wider(names_from = migrationcolor,values_from=migration_count) %>% 
+  mutate(migration_winner=case_when((BLUE > RED) ~ "BLUE",
+                                    (RED > BLUE) ~ "RED") )    %>% 
+  mutate (migration_winner_amount=case_when(BLUE > RED ~ BLUE-RED,
+                                            RED > BLUE ~ RED-BLUE)) %>% 
+  group_by(State, Year, NextElection,migration_winner) %>% 
+  summarise(Migration=migration_winner_amount)
+            
