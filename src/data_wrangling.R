@@ -64,11 +64,12 @@ State_Migration_2019_clean <- read_excel("data/State_to_State_Migrations_Table_2
                                                                               `West Virginia`	='...116',
                                                                               Wisconsin	='...118',
                                                                               Wyoming	='...120') %>% 
-                    inner_join(state_info) %>%  #use just states and rid NA
-                  pivot_longer(cols = -State,
+                      inner_join(state_info) %>%  #use just states and rid NA
+                      pivot_longer(cols = -State,
                       names_to = "StateBefore",
-                        values_to = "Migration" ) %>% 
-                      filter(State != StateBefore) #remove internal migration
+                        values_to = "Migration" ) %>% #turn into tidy data from wider data
+                      filter(State != StateBefore) %>% #remove internal migration
+                      mutate(Election="2020", Year="2019")
 
 # get presidental data
 X1976_2020_president <- read_delim("data/1976-2020-president.tab", 
