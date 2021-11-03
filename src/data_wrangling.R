@@ -294,3 +294,26 @@ colorized_2017_summary_data <- colorized_2017_data %>%
   group_by(State, Year, NextElection,migration_winner) %>% 
   summarise(Migration=migration_winner_amount)
             
+#final product which will allow us to see if hypothesis is correct
+prediction_colorized_2020 <- union(colorized_2017_summary_data,colorized_2018_summary_data)  %>% union(colorized_2019_summary_data) %>% 
+  mutate(Migration=as.numeric(Migration))%>% 
+  mutate(polarized_number=case_when(migration_winner=="RED" ~ -1 *Migration,
+                                    TRUE ~ Migration
+                                    ))         %>% #make red negative number to allow adding of various years
+  group_by(State, ElectionYear=NextElection) %>% 
+  summarize(totalMigration=sum(polarized_number)) %>% 
+  inner_join(presidential_list, by =c("State"="State","ElectionYear"="year")) %>% 
+  select(State, ElectionYear, totalMigration, winner) %>% 
+  mutate(PreviousElectionYear=2016) %>% 
+  inner_join(presidential_list, by =c("State"="State","PreviousElectionYear"="year"))    %>% 
+  select(State, ElectionYear, totalMigration, NewWinner= winner.x, PreviousWinner=winner.y) %>% 
+  arrange(-totalMigration)
+
+#the hypothesis is not looking correct
+#evidence for is PA and AZ AND WI which turned Blue from Red with Blue Migration
+#however GA is red migration but turned blue
+#IL and  had red migration but stayed blue
+#ID and ND and FL had blue migration but stayed red
+#I might need to get populations to get better look but GA is big red flag to theory with over 200K red
+#there is also the problem of no 2020 data but that is COVID year so I doubt it would sway anything
+#maybe the hypothesis should be states get migration from states with the same color
