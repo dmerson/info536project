@@ -317,3 +317,16 @@ prediction_colorized_2020 <- union(colorized_2017_summary_data,colorized_2018_su
 #I might need to get populations to get better look but GA is big red flag to theory with over 200K red
 #there is also the problem of no 2020 data but that is COVID year so I doubt it would sway anything
 #maybe the hypothesis should be states get migration from states with the same color
+
+#make a variable for difference
+For2020Visualizations <-prediction_colorized_2020 %>% 
+  mutate(difference = paste(PreviousWinner,"->",NewWinner ))
+
+#look at average for all the different types
+For2020Visualizations %>% 
+  group_by(difference, NewWinner) %>% 
+  summarize(mean_migration=mean(totalMigration)) %>% 
+  ggplot(aes(x=difference, y=mean_migration, fill=NewWinner)) + 
+  scale_fill_manual(values = c("Blue","Red")) +
+  geom_col(stat = "identity")
+
