@@ -318,7 +318,7 @@ prediction_colorized_2020 <- union(colorized_2017_summary_data,colorized_2018_su
 #there is also the problem of no 2020 data but that is COVID year so I doubt it would sway anything
 #maybe the hypothesis should be states get migration from states with the same color
 
-#make a variable for difference
+#make a variable for difference so we have single category to map in charts
 For2020Visualizations <-prediction_colorized_2020 %>% 
   mutate(difference = paste(PreviousWinner,"->",NewWinner ))
 
@@ -329,4 +329,19 @@ For2020Visualizations %>%
   ggplot(aes(x=difference, y=mean_migration, fill=NewWinner)) + 
   scale_fill_manual(values = c("Blue","Red")) +
   geom_col(stat = "identity")
+
+#look at boxplot
+For2020Visualizations %>% 
+  ggplot(aes(x=difference,y=totalMigration)) + 
+  geom_boxplot()
+
+#Look at where the numbers are for each difference
+For2020Visualizations %>% 
+  ggplot(aes(x=difference, y=totalMigration, color=NewWinner)) + 
+  geom_count() +
+  scale_color_manual(values = c("Blue","Red"))   +
+  scale_y_binned()  
+
+
+ 
 
