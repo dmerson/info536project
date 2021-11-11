@@ -3,7 +3,8 @@
 #load libraries
 library(tidyverse)
 library(readxl)
-
+#get rid of scientific notation
+options(scipen=999)
 #create state to inner join with
 state_info <- data.frame(State = state.name,
                          State_abb = state.abb) %>% 
@@ -371,11 +372,25 @@ ForStatisticalAnalysis2020 <-For2020Visualizations %>%
   select(State,ElectionYear,totalMigration, PreviousWinner,skew2016,NewWinner,skew2020=voterskew,difference) %>% 
   inner_join(state_info) 
 
-#let's look at the data before we lm it
+#let's look at the data after these new variables
 ForStatisticalAnalysis2020 %>% 
   ggplot(aes(x=skew2016,y=totalMigration,color=NewWinner)) +
   geom_point()  +
   geom_text(aes(label = State_abb), size = 4) +
   scale_color_manual(values = c("Blue","Red"))   
 
-  
+#load the library to help look at regressions
+library(effects)
+#look at basic-does 2016 predict 2020?
+previous_skew_to_next_skew_model <- lm(skew2020 ~ skew2016,
+                               data = ForStatisticalAnalysis2020)
+summary(previous_skew_to_next_skew_model)
+
+#look at my state -does 2016 + migration predict 2020 better
+previous_skew__plus_migration_to_next_skew_model <- lm(skew2020 ~ skew2016 + totalMigration,
+                                       data = ForStatisticalAnalysis2020)
+summary(previous_skew__plus_migration_to_next_skew_model)
+
+
+effect("skew2016", previous_skew_to_next_skew_model) %>%
+  data.frame()
