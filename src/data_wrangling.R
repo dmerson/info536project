@@ -212,6 +212,11 @@ republican_list <-  X1976_2020_president %>%
 state_info <- state_info %>% 
   mutate(State=toupper(State))
 
+#there is a mutant MD row needs to be dropped
+democrat_list <- democrat_list %>% 
+  filter(DEMOCRAT!=78)
+republican_list <- republican_list %>% 
+  filter(REPUBLICAN!=259)
 #join data to get 1 row for each state, year with winner
 presidential_list <- state_info %>% 
   inner_join(democrat_list ) %>% 
@@ -307,7 +312,8 @@ prediction_colorized_2020 <- union(colorized_2017_summary_data,colorized_2018_su
   mutate(PreviousElectionYear=2016) %>% 
   inner_join(presidential_list, by =c("State"="State","PreviousElectionYear"="year"))    %>% 
   select(State, ElectionYear, totalMigration, NewWinner= winner.x, PreviousWinner=winner.y) %>% 
-  arrange(-totalMigration)
+  arrange(-totalMigration) %>% 
+  distinct()
 
 #the hypothesis is not looking correct
 #evidence for is PA and AZ AND WI which turned Blue from Red with Blue Migration
@@ -342,6 +348,34 @@ For2020Visualizations %>%
   scale_color_manual(values = c("Blue","Red"))   +
   scale_y_binned()  
 
+#I need to create some continuous variables for looking closer at LM
+#I am going to do the different between democrats-republican voters in 2016 and 2020
+#this should give me 3 variables for visualizations
+#first I got to make my stat
+presidential_list <-presidential_list %>% 
+  mutate(voterskew=DEMOCRAT-REPUBLICAN)
+#get 2016 data for stat
+skew2016 <- presidential_list %>% 
+  filter(year==2016) %>% #delete mutate MD row!
+  filter(REPUBLICAN !=259)
+   
+#get 2020 data for stat
+skew2020 <-presidential_list %>% 
+  filter(year==2020)
+#now join all the relevant values into new dataframe
+ForStatisticalAnalysis2020 <-For2020Visualizations %>% 
+  inner_join(skew2016) %>% 
+  mutate(skew2016=voterskew) %>% 
+  select(-voterskew) %>% 
+  inner_join(skew2020, by=c("State"="State")) %>% 
+  select(State,ElectionYear,totalMigration, PreviousWinner,skew2016,NewWinner,skew2020=voterskew,difference) %>% 
+  inner_join(state_info) 
 
- 
+#let's look at the data before we lm it
+ForStatisticalAnalysis2020 %>% 
+  ggplot(aes(x=skew2016,y=totalMigration,color=NewWinner)) +
+  geom_point()  +
+  geom_text(aes(label = State_abb), size = 4) +
+  scale_color_manual(values = c("Blue","Red"))   
 
+  
