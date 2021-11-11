@@ -379,8 +379,9 @@ ForStatisticalAnalysis2020 %>%
   geom_text(aes(label = State_abb), size = 4) +
   scale_color_manual(values = c("Blue","Red"))   
 
-#load the library to help look at regressions
-library(effects)
+#look at whether migration predicts new skew
+
+ 
 #look at basic-does 2016 predict 2020?
 previous_skew_to_next_skew_model <- lm(skew2020 ~ skew2016,
                                data = ForStatisticalAnalysis2020)
@@ -392,5 +393,4 @@ previous_skew__plus_migration_to_next_skew_model <- lm(skew2020 ~ skew2016 + tot
 summary(previous_skew__plus_migration_to_next_skew_model)
 
 
-effect("skew2016", previous_skew_to_next_skew_model) %>%
-  data.frame()
+ 
