@@ -1,0 +1,101 @@
+---
+title: "Data Modeling"
+output: html_notebook
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, error = FALSE)
+library(knitr)
+library(tidyverse)
+library(effects)
+```
+# Introduction
+
+I kind of did modeling last week with my visualization. So let me pull from a csv file I made from my data wrangling with visualization.
+ 
+```{r}
+
+
+glimpse(ForStatisticalAnalysis)
+```
+In the following table, I have measured "skew" which is Democratic votes - Republic votes. So a positive number means democratic. I have the results from the 2016 and 2020 election. 
+
+Total migration is total migration for 2017, 2018, and 2019. 2020 was not available at the time of this analysis,but it was the year of COVID, so it is doubtful there was much migration. The total migration number is the sum of these three years with the total of migration from blue states (in 2016) minus the total migration from red states(2016). Once again a positive number means migration had more democratic state migration.
+
+
+# Analysis
+I looked at my variable of migration in relation to 2020 skew. This was to see if it could predict the skew of the 2020 election.
+```{r}
+migration_to_next_skew_model <- lm(skew2020 ~ totalMigration,
+                                       data = ForStatisticalAnalysis)
+```
+
+```{r}
+
+summary(migration_to_next_skew_model)
+```
+
+With just this limited information, it shows a positive relation between migration with significance to .01. 
+However, the effect is minuscule with an Adjusted R-squared of 0.009984.So it explains very limit of the data.
+We can visualize this with effects.
+```{r}
+effect("totalMigration", migration_to_next_skew_model) %>%
+  data.frame() %>%  kable()
+```
+
+```{r}
+effect("totalMigration", migration_to_next_skew_model) %>%
+  data.frame() %>%
+  ggplot(aes(x = totalMigration,
+             y = fit,
+             ymin = lower,
+             ymax = upper,
+             label = round(fit, digits = 2))) +
+  geom_errorbar(width = .5) +
+  geom_label() +
+  theme_linedraw()
+
+```
+
+# The well..but not so fast section
+Let's look at this more carefully. The variable difference is whether the state went from Red to Red, Red to Blue, or Blue to Blue. We are looking to find out the cause of the Red to Blue changes.
+```{r}
+ForStatisticalAnalysis %>% 
+  ggplot(aes(x=totalMigration, y=skew2020, color=difference)) +
+  geom_point() +
+  geom_jitter() + 
+  geom_smooth(method="lm") +
+  scale_color_manual(values = c("Blue","Purple","Red"))  
+```
+You will notice that the purple is a straight line. A lot of the blue dots are the top, red are on the bottom, and purple are in the middle.
+But notice there are some red dots to the right of 0 and blue dots to the left of 0. Those are values that are against the trend and why it is such a small effect. There are also some purple dots to the left of center.
+
+Let's look at something more obvious to everyone, how does the state's voting pattern in 2016 can help predict the voting pattern in 2020.
+```{r}
+ForStatisticalAnalysis %>% 
+  ggplot(aes(x=skew2016, y=skew2020, color=difference)) +
+  geom_point() +
+  geom_jitter() + 
+  geom_smooth(method="lm") +
+  scale_color_manual(values = c("Blue","Purple","Red"))  
+```
+
+That straight line with almost 2 perfectly colored parts of the line show something that regression confirms.
+```{r}
+migration_from_previous_election <- lm(skew2020 ~ skew2016,
+                                       data = ForStatisticalAnalysis)
+summary(migration_from_previous_election)
+```
+This is a very tight correlation with a 98% R-squared value. This is the intuitive insight most people have without any statistics: What party a state was last time is a pretty good predictor of what it will be next time.
+
+But maybe with this migration data, it might be even better. But when we try this out we get the following.
+
+```{r}
+migration_from_previous_election <- lm(skew2020 ~ skew2016 + totalMigration,
+                                       data = ForStatisticalAnalysis)
+summary(migration_from_previous_election)
+```
+
+In this case, we see that migration has a negative effect, but one of no significance. The previous year's skew is still a highly signicant predictor of the next election's skew.
+
+# Conclusion
+With all the data put together, we conclude that migration is not a factor in predicting a changing from one party to another.

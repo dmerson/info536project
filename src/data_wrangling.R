@@ -380,6 +380,9 @@ ForStatisticalAnalysis2020 %>%
   scale_color_manual(values = c("Blue","Red"))   
 
 #look at whether migration predicts new skew
+migration_to_next_skew_model <- lm(skew2020 ~ totalMigration,
+                                       data = ForStatisticalAnalysis2020)
+summary(migration_to_next_skew_model)
 
  
 #look at basic-does 2016 predict 2020?
@@ -392,5 +395,6 @@ previous_skew__plus_migration_to_next_skew_model <- lm(skew2020 ~ skew2016 + tot
                                        data = ForStatisticalAnalysis2020)
 summary(previous_skew__plus_migration_to_next_skew_model)
 
-
+#write out csv for my data modeling R Markdown
+write_csv(ForStatisticalAnalysis2020,"data/ForStatAnalysis.csv")
  
