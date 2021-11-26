@@ -7,17 +7,28 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, error = FALSE)
 library(knitr)
 library(tidyverse)
 library(effects)
+library(usmap)
+library(janitor)
 ```
 # Introduction
 
-I kind of did modeling last week with my visualization. So let me pull from a csv file I made from my data wrangling with visualization.
- 
-```{r}
+We are looking to explain the changing of certain states in the 2020 Election from Republican to Democratic. I am doing this with some variables I have calculated from Census data on migration from one state to another.
+```{r, echo=FALSE}
+#let me clean to better work with maps
+ForStatisticalAnalysis <-read_csv("data/ForStatAnalysis.csv")
+map_visualization <- ForStatisticalAnalysis %>% clean_names()
 
-
-glimpse(ForStatisticalAnalysis)
 ```
-In the following table, I have measured "skew" which is Democratic votes - Republic votes. So a positive number means democratic. I have the results from the 2016 and 2020 election. 
+The following map is a good visualization of what we are trying to explain. We want to see if we can explain the purple states. However, we want to explain them in a way that we don't get confused on why states didn't switch sides.  
+
+```{r}
+plot_usmap(data = map_visualization, values = "difference", regions = "states") + 
+  scale_fill_manual(values = c("blue", "purple", "red"), name="Election") + 
+  labs(title = "2020 Election", subtitle = "2020 Election") +
+  theme(legend.position = "right")
+```
+
+I have measured "skew" which is Democratic votes - Republic votes. So a positive number means democratic. I have the results from the 2016 and 2020 election. 
 
 Total migration is total migration for 2017, 2018, and 2019. 2020 was not available at the time of this analysis,but it was the year of COVID, so it is doubtful there was much migration. The total migration number is the sum of these three years with the total of migration from blue states (in 2016) minus the total migration from red states(2016). Once again a positive number means migration had more democratic state migration.
 
@@ -42,7 +53,7 @@ effect("totalMigration", migration_to_next_skew_model) %>%
   data.frame() %>%  kable()
 ```
 
-```{r}
+```{r, message=FALSE}
 effect("totalMigration", migration_to_next_skew_model) %>%
   data.frame() %>%
   ggplot(aes(x = totalMigration,
@@ -57,19 +68,21 @@ effect("totalMigration", migration_to_next_skew_model) %>%
 ```
 
 # The well..but not so fast section
-Let's look at this more carefully. The variable difference is whether the state went from Red to Red, Red to Blue, or Blue to Blue. We are looking to find out the cause of the Red to Blue changes.
-```{r}
+Let's look at this more carefully. The variable "difference" is whether the state went from Red to Red, Red to Blue, or Blue to Blue. We are looking to find out the cause of the Red to Blue changes.
+```{r, message=FALSE, warning=FALSE}
 ForStatisticalAnalysis %>% 
   ggplot(aes(x=totalMigration, y=skew2020, color=difference)) +
   geom_point() +
   geom_jitter() + 
+  xlab("Migration") +
+  ylab("2020 Skew") +
   geom_smooth(method="lm") +
   scale_color_manual(values = c("Blue","Purple","Red"))  
 ```
-You will notice that the purple is a straight line. A lot of the blue dots are the top, red are on the bottom, and purple are in the middle.
+You will notice that the purple line representing the changed states is a straight line. A lot of the blue dots are the top, red are on the bottom, and purple are in the middle.
 But notice there are some red dots to the right of 0 and blue dots to the left of 0. Those are values that are against the trend and why it is such a small effect. There are also some purple dots to the left of center.
 
-Let's look at something more obvious to everyone, how does the state's voting pattern in 2016 can help predict the voting pattern in 2020.
+Let's look at something more obvious to everyone, how does the state's voting pattern in 2016 help predict the voting pattern in 2020.
 ```{r}
 ForStatisticalAnalysis %>% 
   ggplot(aes(x=skew2016, y=skew2020, color=difference)) +
@@ -97,5 +110,19 @@ summary(migration_from_previous_election)
 
 In this case, we see that migration has a negative effect, but one of no significance. The previous year's skew is still a highly signicant predictor of the next election's skew.
 
+# Looking at maps to better understand the data
+
+
+
+By looking at the map, we can see that 3 of the 5 states border at least 2 blue states. Michigan is in the same region as Illinois and is very close. Let's now look at the migration data. Remember that the migration data is Democratic-Republican, so blue means Democratic migration.
+```{r}
+plot_usmap(data = map_visualization, values = "total_migration", regions = "states") + 
+  scale_fill_continuous(low = "red", high = "blue", name = "Migration", label = scales::comma) + 
+  labs(title = "U.S. Migration", subtitle = "Migration from other states") +
+  theme(legend.position = "right")
+```
+Arizona and Pennsylvania show heavy migration from democratic states and they were purple in the last map.This is not surprising because they each border 3 Democratic states in the 2016 election. However, Georgia has a high level of Republican migration and it turned purple.Once again, it is surrounded by Republic states in the 2016 Election. It looks like migration numbers are greatly influenced by proximity.
+
 # Conclusion
-With all the data put together, we conclude that migration is not a factor in predicting a changing from one party to another.
+
+With all the data put together, we conclude that migration is not a factor in changing from one party to another in the next election cycle. However, we can theorize that the states surrounding a state seem to influence the migration. Georgia, the biggest surprise of the 2020 election, doesn't seem to be explained in any way by migration.
