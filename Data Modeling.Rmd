@@ -84,12 +84,21 @@ But notice there are some red dots to the right of 0 and blue dots to the left o
 
 Let's look at something more obvious to everyone, how does the state's voting pattern in 2016 help predict the voting pattern in 2020.
 ```{r}
+library(scales)
 ForStatisticalAnalysis %>% 
   ggplot(aes(x=skew2016, y=skew2020, color=difference)) +
   geom_point() +
   geom_jitter() + 
   geom_smooth(method="lm") +
-  scale_color_manual(values = c("Blue","Purple","Red"))  
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  scale_x_continuous(labels = comma) +
+  scale_y_continuous(labels=comma) +
+  scale_color_manual(values = c("Blue","Purple","Red"))  +
+  labs(title = "Skew 2016-2020",
+       subtitle = "Visualizing skew from the last 2 elections",
+       x = "2016 Skew",
+       y = "2020 Skew" )
 ```
 
 That straight line with almost 2 perfectly colored parts of the line show something that regression confirms.
@@ -108,7 +117,7 @@ migration_from_previous_election <- lm(skew2020 ~ skew2016 + totalMigration,
 summary(migration_from_previous_election)
 ```
 
-In this case, we see that migration has a negative effect, but one of no significance. The previous year's skew is still a highly signicant predictor of the next election's skew.
+In this case, we see that migration has a negative effect, but one of no significance. The previous year's skew is still a highly significant predictor of the next election's skew.
 
 # Looking at maps to better understand the data
 
