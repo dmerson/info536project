@@ -73,7 +73,7 @@ shinyUI(
                   We also created a variable called difference which had a value of “RED-RED,” “RED-BLUE,” or “BLUE-BLUE,” 
                   which describes the state’s group for our analysis. "),
                 p("You can see the data listed below in searchable form."),
-                dataTableOutput("base_data")
+                DT::dataTableOutput("base_data")
                
         ),
                 
@@ -109,7 +109,7 @@ shinyUI(
         tabItem(tabName = "Discussion",
                 h2("Discussion"),
                  p("From the results in this study, we conclude that migration does not have an effect on the changing of states in the 2020 election.
-                   We conclude that the biggest factor explained the results for the 2020 election is the 2016 election."),
+                   We conclude that the biggest factor explained the results for the 2020 election is the 2016 election as the following graph illustrates."),
                 plotOutput("linegraph")
                 
                 )

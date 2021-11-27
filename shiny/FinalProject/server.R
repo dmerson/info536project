@@ -17,19 +17,19 @@ data_for_plots <-read_csv("data/ForStatAnalysis.csv")
 data_for_table <- data_for_plots %>% select(-ElectionYear ) %>% select(-State_abb) %>% rename('Total Migration'=totalMigration)
 map_visualization <- data_for_plots %>% clean_names()
 migration_to_next_skew_model <- lm(skew2020 ~ totalMigration,
-                                   data = ForStatisticalAnalysis)
+                                   data = data_for_plots)
 migration_to_next_skew_model_summary=summary(migration_to_next_skew_model)
 migration_from_previous_election <- lm(skew2020 ~ skew2016 + totalMigration,
-                                       data = ForStatisticalAnalysis)
+                                       data = data_for_plots)
 migration_from_previous_election_summary <-summary(migration_from_previous_election)
 
 skew_from_previous_election <- lm(skew2020 ~ skew2016 ,
-                                       data = ForStatisticalAnalysis)
+                                       data = data_for_plots)
 skew_from_previous_election_summary <-summary(skew_from_previous_election)
 
 shinyServer(function(input, output) {
 
-    output$base_data <- renderDataTable(
+    output$base_data <- DT::renderDataTable(
       data_for_table,filter="top",
       options=list(
         pageLength = 10, scrollX=TRUE,  options = list(
@@ -52,7 +52,7 @@ shinyServer(function(input, output) {
                    labs(title = "U.S. Migration", subtitle = "Democratic-Republican Migration from other states") +
                    theme(legend.position = "right")
     )
-    output$linegraph <-renderPlot(ForStatisticalAnalysis %>% 
+    output$linegraph <-renderPlot(data_for_plots %>% 
                                     ggplot(aes(x=skew2016, y=skew2020, color=difference)) +
                                     geom_point() +
                                     geom_jitter() + 
